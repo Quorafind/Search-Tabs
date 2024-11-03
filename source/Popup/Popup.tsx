@@ -26,38 +26,13 @@ const extractDomain = (url: string) => {
   }
 };
 
-const useDarkMode = () => {
-  const [isDark, setIsDark] = React.useState(
-    window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-  );
-
-  React.useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = (e: MediaQueryListEvent) => setIsDark(e.matches);
-
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
-
-  return isDark;
-};
-
 const Popup: React.FC = () => {
-  const isDark = useDarkMode();
   const [openTabs, setOpenTabs] = React.useState<TabItem[]>([]);
   const [recentlyClosedTabs, setRecentlyClosedTabs] = React.useState<TabItem[]>(
     []
   );
   const [sessionsError, setSessionsError] = React.useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    document.body.classList.remove("dark");
-    if (isDark) {
-      document.body.classList.add("dark");
-    }
-  }, [isDark]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -138,7 +113,12 @@ const Popup: React.FC = () => {
     <div className={`tab-search`}>
       <Command>
         <div cmdk-tab-search-top-shine="" />
-        <Command.Input ref={inputRef} placeholder="Search tabs..." autoFocus />
+        <Command.Input
+          ref={inputRef}
+          placeholder="Search tabs..."
+          autoFocus
+          inputMode="search"
+        />
         <hr cmdk-tab-search-loader="" />
         <Command.List>
           <Command.Empty>No matching tabs found</Command.Empty>

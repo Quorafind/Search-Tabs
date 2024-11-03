@@ -1,6 +1,6 @@
 {
   "name": "search-tabs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Search tabs in your browser",
   "private": true,
   "repository": "https://github.com/quorafind/search-tabs.git",
@@ -11,8 +11,8 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">=10.0.0",
-    "yarn": ">= 1.0.0"
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
   },
   "scripts": {
     "dev:chrome": "cross-env NODE_ENV=development cross-env TARGET_BROWSER=chrome webpack --watch",
@@ -21,16 +21,21 @@
     "build:chrome": "cross-env NODE_ENV=production cross-env TARGET_BROWSER=chrome webpack",
     "build:firefox": "cross-env NODE_ENV=production cross-env TARGET_BROWSER=firefox webpack",
     "build:opera": "cross-env NODE_ENV=production cross-env TARGET_BROWSER=opera webpack",
-    "build": "yarn run build:chrome && yarn run build:firefox && yarn run build:opera",
+    "build": "pnpm run build:chrome && pnpm run build:firefox && pnpm run build:opera",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix"
   },
   "dependencies": {
     "@babel/runtime": "^7.23.9",
+    "@codemirror/commands": "^6.7.1",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/view": "^6.34.1",
     "advanced-css-reset": "^1.2.2",
     "cmdk": "^1.0.3",
+    "codemirror": "^6.0.1",
     "lucide-react": "^0.454.0",
     "react": "^18",
+    "react-codemirror2": "^8.0.0",
     "react-dom": "^18",
     "use-sync-external-store": "^1.2.2",
     "webext-base-css": "^1.4.4",
@@ -86,5 +91,6 @@
     "webpack-ext-reloader": "^1.1.12",
     "wext-manifest-loader": "^2.4.1",
     "wext-manifest-webpack-plugin": "^1.4.0"
-  }
+  },
+  "packageManager": "pnpm@9.11.0"
 }

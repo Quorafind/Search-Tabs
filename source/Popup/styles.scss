@@ -9,7 +9,7 @@ body {
 
 #popup {
   width: 400px;
-  max-height: 600px;
+  max-height: 700px;
   display: flex;
   flex-direction: column;
 }
@@ -397,7 +397,7 @@ body {
 
   [cmdk-list] {
     padding: 0 8px;
-    height: 393px;
+    height: 493px;
     overflow: auto;
     overscroll-behavior: contain;
     scroll-padding-block-end: 40px;
