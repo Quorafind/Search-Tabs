@@ -23,9 +23,6 @@ const extensionReloaderPlugin =
         port: 9090, // Which port use to create the server
         reloadPage: true, // Force the reload of the page also
         entries: {
-          // TODO: reload manifest on update
-          contentScript: "contentScript",
-          background: "background",
           extensionPage: ["popup"],
         },
       })
@@ -59,10 +56,7 @@ module.exports = {
 
   entry: {
     manifest: path.join(sourcePath, "manifest.json"),
-    background: path.join(sourcePath, "Background", "index.ts"),
-    contentScript: path.join(sourcePath, "ContentScript", "index.ts"),
     popup: path.join(sourcePath, "Popup", "index.tsx"),
-    // options: path.join(sourcePath, "Options", "index.tsx"),
   },
 
   output: {
