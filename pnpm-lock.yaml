@@ -11,15 +11,6 @@ importers:
       '@babel/runtime':
         specifier: ^7.23.9
         version: 7.26.0
-      '@codemirror/commands':
-        specifier: ^6.7.1
-        version: 6.7.1
-      '@codemirror/state':
-        specifier: ^6.4.1
-        version: 6.4.1
-      '@codemirror/view':
-        specifier: ^6.34.1
-        version: 6.34.1
       advanced-css-reset:
         specifier: ^1.2.2
         version: 1.2.2
@@ -35,9 +26,6 @@ importers:
       react:
         specifier: ^18
         version: 18.3.1
-      react-codemirror2:
-        specifier: ^8.0.0
-        version: 8.0.0(codemirror@6.0.1(@lezer/common@1.2.3))(react@18.3.1)
       react-dom:
         specifier: ^18
         version: 18.3.1(react@18.3.1)
@@ -3288,12 +3276,6 @@ packages:
 
   randombytes@2.1.0:
     resolution: {integrity: sha512-vYl3iOX+4CKUWuxGi9Ukhie6fsqXqS9FE2Zaic4tNFD2N2QQaXOMFbuKK4QmDHC0JO6B1Zp41J0LpT0oR68amQ==}
-
-  react-codemirror2@8.0.0:
-    resolution: {integrity: sha512-JIbhXoghvX0BrasIoCQvRxBPIU78plfjF1Buz0gaMFvZXwEDjkCYBkQhucoOtudQ7ikbB1jJUnmCsutElti7yA==}
-    peerDependencies:
-      codemirror: 5.x
-      react: '>=15.5 <=18.x'
 
   react-dom@18.3.1:
     resolution: {integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==}
@@ -7449,11 +7431,6 @@ snapshots:
   randombytes@2.1.0:
     dependencies:
       safe-buffer: 5.2.1
-
-  react-codemirror2@8.0.0(codemirror@6.0.1(@lezer/common@1.2.3))(react@18.3.1):
-    dependencies:
-      codemirror: 6.0.1(@lezer/common@1.2.3)
-      react: 18.3.1
 
   react-dom@18.3.1(react@18.3.1):
     dependencies:

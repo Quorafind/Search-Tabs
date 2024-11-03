@@ -33,6 +33,7 @@ const Popup: React.FC = () => {
   );
   const [sessionsError, setSessionsError] = React.useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -118,9 +119,15 @@ const Popup: React.FC = () => {
           placeholder="Search tabs..."
           autoFocus
           inputMode="search"
+          onValueChange={() => {
+            // Reset scroll position when search value changes
+            if (listRef.current) {
+              listRef.current.scrollTop = 0;
+            }
+          }}
         />
         <hr cmdk-tab-search-loader="" />
-        <Command.List>
+        <Command.List ref={listRef}>
           <Command.Empty>No matching tabs found</Command.Empty>
 
           {mediaTabs.length > 0 && (
