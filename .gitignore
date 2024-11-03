@@ -202,3 +202,8 @@ dist/
 !.yarn/releases
 !.yarn/plugins
 .pnp.*
+
+# Rar/Zip/Tar archives
+*.rar
+*.zip
+*.tar
