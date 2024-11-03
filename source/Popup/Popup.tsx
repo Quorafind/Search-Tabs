@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, KeyboardEvent } from "react";
 import { browser } from "webextension-polyfill-ts";
 import { Command } from "cmdk";
 import { Play, Pause, X, Earth } from "lucide-react";
@@ -19,6 +19,10 @@ interface TabItem {
 
 // Add this helper function to extract domain from URL
 const extractDomain = (url: string) => {
+  if (url.startsWith("about:")) {
+    return url;
+  }
+
   try {
     return new URL(url).hostname;
   } catch {
@@ -26,12 +30,14 @@ const extractDomain = (url: string) => {
   }
 };
 
+
 const Popup: React.FC = () => {
   const [openTabs, setOpenTabs] = React.useState<TabItem[]>([]);
   const [recentlyClosedTabs, setRecentlyClosedTabs] = React.useState<TabItem[]>(
     []
   );
   const [sessionsError, setSessionsError] = React.useState<string>("");
+  const [searchValue, setSearchValue] = React.useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -102,6 +108,24 @@ const Popup: React.FC = () => {
     fetchOpenTabs();
   };
 
+  // Handle search with default search engine
+  const handleSearch = async () => {
+    if (searchValue) {
+      await browser.tabs.create({
+        url: `https://www.google.com/search?q=${encodeURIComponent(searchValue)}`,
+      });
+      window.close();
+    }
+  };
+
+  // Handle keyboard events
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && e.ctrlKey) {
+      e.preventDefault();
+      handleSearch();
+    }
+  };
+
   React.useEffect(() => {
     fetchOpenTabs();
     fetchRecentlyClosedTabs();
@@ -112,15 +136,17 @@ const Popup: React.FC = () => {
 
   return (
     <div className={`tab-search`}>
-      <Command>
+      <Command loop>
         <div cmdk-tab-search-top-shine="" />
         <Command.Input
           ref={inputRef}
           placeholder="Search tabs..."
           autoFocus
           inputMode="search"
-          onValueChange={() => {
-            // Reset scroll position when search value changes
+          value={searchValue}
+          onKeyDown={handleKeyDown}
+          onValueChange={(value) => {
+            setSearchValue(value);
             if (listRef.current) {
               listRef.current.scrollTop = 0;
             }
@@ -137,7 +163,7 @@ const Popup: React.FC = () => {
                   className="media-tab-item"
                   key={tab.id}
                   value={tab.title + tab.id + index}
-                  keywords={[tab.url || ""]}
+                  keywords={[tab.title || "", extractDomain(tab.url || "")]}
                   onSelect={() => tab.id && switchToTab(tab.id)}
                 >
                   <Logo>
@@ -188,7 +214,7 @@ const Popup: React.FC = () => {
               <Command.Item
                 key={tab.id}
                 value={tab.title + tab.id + index}
-                keywords={[tab.url || ""]}
+                keywords={[tab.title || "", extractDomain(tab.url || "")]}
                 onSelect={() => tab.id && switchToTab(tab.id)}
               >
                 <Logo>
@@ -227,7 +253,7 @@ const Popup: React.FC = () => {
                 <Command.Item
                   key={index}
                   value={tab.title + tab.id + index}
-                  keywords={[tab.url || ""]}
+                  keywords={[tab.title || "", extractDomain(tab.url || "")]}
                   onSelect={() => tab.url && reopenTab(tab.url)}
                 >
                   <Logo>
@@ -255,6 +281,15 @@ const Popup: React.FC = () => {
             </Command.Item>
           )}
         </Command.List>
+
+        <div cmdk-raycast-footer="">
+          <button cmdk-raycast-open-trigger="">
+            Open Application
+            <kbd>↵</kbd>
+          </button>
+
+          <hr />
+        </div>
       </Command>
     </div>
   );
