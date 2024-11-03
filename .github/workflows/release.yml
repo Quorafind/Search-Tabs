@@ -1,0 +1,38 @@
+name: Release Firefox Extension
+
+on:
+    release:
+        types: [created]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            
+            - name: Setup Node.js and PNPM
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 20
+                  
+            - name: Install PNPM
+              run: npm install -g pnpm@9
+              
+            - name: Install Dependencies
+              run: pnpm install
+              
+            - name: Build Firefox Extension
+              id: build
+              run: |
+                  pnpm run build:firefox
+                  echo "::set-output name=tag_name::$(git tag --sort version:refname | tail -n 1)"
+
+            - name: Upload Firefox Extension
+              uses: actions/upload-release-asset@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ github.event.release.upload_url }}
+                  asset_path: ./extension/firefox.xpi
+                  asset_name: search-tabs-${{ steps.build.outputs.tag_name }}.xpi
+                  asset_content_type: application/x-xpinstall
