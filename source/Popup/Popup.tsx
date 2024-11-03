@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { browser } from "webextension-polyfill-ts";
 import { Command } from "cmdk";
+import { Play, Pause, X } from "lucide-react";
 import "./styles.scss";
 
 interface TabItem {
@@ -9,7 +10,21 @@ interface TabItem {
   url: string;
   favIconUrl?: string;
   lastAccessed?: number;
+  active?: boolean;
+  audible?: boolean;
+  mutedInfo?: {
+    muted: boolean;
+  };
 }
+
+// Add this helper function to extract domain from URL
+const extractDomain = (url: string) => {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+};
 
 // Create a function to generate default icon DOM element
 const createDefaultIconElement = () => {
@@ -48,11 +63,6 @@ const useDarkMode = () => {
       window.matchMedia("(prefers-color-scheme: dark)").matches
   );
 
-  console.log(
-    window.matchMedia,
-    window.matchMedia("(prefers-color-scheme: dark)")
-  );
-
   React.useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = (e: MediaQueryListEvent) => setIsDark(e.matches);
@@ -74,7 +84,6 @@ const Popup: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    console.log(isDark, document.body);
     document.body.classList.remove("dark");
     if (isDark) {
       document.body.classList.add("dark");
@@ -133,17 +142,28 @@ const Popup: React.FC = () => {
     await browser.tabs.update(tabId, { active: true });
     const win = await browser.windows.getCurrent();
     await browser.windows.update(win.id!, { focused: true });
+    window.close();
   };
 
   // Reopen closed tab
   const reopenTab = async (url: string) => {
     await browser.tabs.create({ url });
+    window.close();
+  };
+
+  // Media controls
+  const toggleMute = async (tabId: number, muted: boolean) => {
+    await browser.tabs.update(tabId, { muted: !muted });
+    fetchOpenTabs();
   };
 
   React.useEffect(() => {
     fetchOpenTabs();
     fetchRecentlyClosedTabs();
   }, []);
+
+  const mediaTabs = openTabs.filter((tab) => tab.audible);
+  const activeTabs = openTabs.filter((tab) => !tab.audible);
 
   return (
     <div className={`tab-search`}>
@@ -154,8 +174,73 @@ const Popup: React.FC = () => {
         <Command.List>
           <Command.Empty>No matching tabs found</Command.Empty>
 
-          <Command.Group heading="Open Tabs">
-            {openTabs.map((tab, index) => (
+          {mediaTabs.length > 0 && (
+            <Command.Group heading="Media Tabs">
+              {mediaTabs.map((tab, index) => (
+                <Command.Item
+                  className="media-tab-item"
+                  key={tab.id}
+                  value={tab.title + tab.id + index}
+                  keywords={[tab.url || ""]}
+                  onSelect={() => tab.id && switchToTab(tab.id)}
+                >
+                  <Logo>
+                    {tab.favIconUrl ? (
+                      <img
+                        src={tab.favIconUrl}
+                        alt=""
+                        width={16}
+                        height={16}
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          const iconElement = createDefaultIconElement();
+                          e.currentTarget.parentElement?.appendChild(
+                            iconElement
+                          );
+                        }}
+                      />
+                    ) : (
+                      <DefaultIcon />
+                    )}
+                  </Logo>
+                  <div className="tab-content">
+                    <div className="tab-title">{tab.title}</div>
+                    <div className="tab-url">
+                      {tab.url ? extractDomain(tab.url) : ""}
+                    </div>
+                  </div>
+                  <div className="tab-actions">
+                    <button
+                      className="action-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        tab.id &&
+                          toggleMute(tab.id, tab.mutedInfo?.muted || false);
+                      }}
+                    >
+                      {tab.mutedInfo?.muted ? (
+                        <Play size={12} />
+                      ) : (
+                        <Pause size={12} />
+                      )}
+                    </button>
+                    <button
+                      className="action-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        tab.id && browser.tabs.remove(tab.id);
+                      }}
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                </Command.Item>
+              ))}
+            </Command.Group>
+          )}
+
+          <Command.Group heading="Opened Tabs">
+            {activeTabs.map((tab, index) => (
               <Command.Item
                 key={tab.id}
                 value={tab.title + tab.id + index}
@@ -179,7 +264,23 @@ const Popup: React.FC = () => {
                     <DefaultIcon />
                   )}
                 </Logo>
-                <span>{tab.title}</span>
+                <div className="tab-content">
+                  <div className="tab-title">{tab.title}</div>
+                  <div className="tab-url">
+                    {tab.url ? extractDomain(tab.url) : ""}
+                  </div>
+                </div>
+                <div className="tab-actions">
+                  <button
+                    className="action-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      tab.id && browser.tabs.remove(tab.id);
+                    }}
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
               </Command.Item>
             ))}
           </Command.Group>
@@ -214,7 +315,14 @@ const Popup: React.FC = () => {
                       <DefaultIcon />
                     )}
                   </Logo>
-                  <span>{tab.title}</span>
+                  <div className="tab-content">
+                    <div className="tab-title">{tab.title}</div>
+                    <div className="tab-url">
+                      {tab.url ? extractDomain(tab.url) : ""}
+                    </div>
+                  </div>
+                  <div className="tab-actions">
+                  </div>
                 </Command.Item>
               ))}
             </Command.Group>
@@ -226,13 +334,6 @@ const Popup: React.FC = () => {
             </Command.Item>
           )}
         </Command.List>
-
-        {/* <div cmdk-tab-search-footer="">
-          <button cmdk-tab-search-open-trigger="">
-            Open Tab
-            <kbd>↵</kbd>
-          </button>
-        </div> */}
       </Command>
     </div>
   );

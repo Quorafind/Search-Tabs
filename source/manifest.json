@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Search Tabs",
-  "version": "0.0.1",
+  "version": "0.1.0",
 
   "icons": {
     "16": "assets/icons/favicon-16.png",
@@ -10,7 +10,7 @@
     "128": "assets/icons/favicon-128.png"
   },
   "description": "You can search all your tabs in current session.",
-  "homepage_url": "https://github.com/abhijithvijayan/web-extension-starter",
+  "homepage_url": "https://github.com/quorafind/search-tabs",
   "short_name": "Search Tabs",
 
   "permissions": [
@@ -49,13 +49,6 @@
     "default_title": "tiny title",
     "__chrome|opera__chrome_style": false,
     "__firefox__browser_style": false
-  },
-
-  "__chrome|opera__options_page": "options.html",
-  "options_ui": {
-    "page": "options.html",
-    "open_in_tab": true,
-    "__chrome__chrome_style": false
   },
 
   "background": {

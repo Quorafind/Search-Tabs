@@ -121,7 +121,7 @@ body {
   [cmdk-input] {
     background: transparent;
     color: var(--gray12);
-    
+
     &::placeholder {
       color: var(--gray9);
     }
@@ -217,7 +217,7 @@ body {
     border: none;
     width: 100%;
     font-size: 15px;
-    padding: 8px 16px;
+    padding: 4px 16px;
     outline: none;
     background: var(--bg);
     color: var(--gray12);
@@ -284,12 +284,14 @@ body {
     transition: var(--theme-transition);
     content-visibility: auto;
 
+    position: relative;
     cursor: pointer;
     height: 40px;
     border-radius: 8px;
     font-size: 14px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
     padding: 0 8px;
     color: var(--gray12);
@@ -326,13 +328,64 @@ body {
       height: 18px;
     }
 
-    > span,
-    > div:last-child {
+    &.media-tab-item {
+      padding-right: 8px;
+    }
+
+    .tab-content {
       flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-right: 8px;
+      min-width: 0; // Important for text truncation
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
+      
+      .tab-title {
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .tab-url {
+        font-size: 12px;
+        color: var(--gray11);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    .tab-actions {
+      flex-shrink: 0;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      
+      .action-button {
+        background: none;
+        border: none;
+        padding: 4px;
+        color: var(--gray11);
+        cursor: pointer;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        &:hover {
+          background: var(--gray5);
+          color: var(--gray12);
+        }
+      }
+    }
+
+    &:hover .tab-actions {
+      opacity: 1;
+    }
+
+    .blurLogo {
+      flex-shrink: 0;
     }
   }
 
@@ -438,9 +491,10 @@ body {
     user-select: none;
     font-size: 12px;
     color: var(--gray11);
-    padding: 0 8px;
+    padding: 6px 8px;
     display: flex;
     align-items: center;
+    font-weight: 500;
   }
 
   [cmdk-tab-search-footer] {
@@ -695,4 +749,8 @@ body {
     opacity: 0;
     transform: scale(0.96);
   }
+}
+
+.media-tab-item {
+  padding-right: 8px !important;
 }
