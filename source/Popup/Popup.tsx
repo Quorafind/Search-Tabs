@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { browser } from "webextension-polyfill-ts";
 import { Command } from "cmdk";
-import { Play, Pause, X } from "lucide-react";
+import { Play, Pause, X, Earth } from "lucide-react";
 import "./styles.scss";
 
 interface TabItem {
@@ -25,37 +25,6 @@ const extractDomain = (url: string) => {
     return url;
   }
 };
-
-// Create a function to generate default icon DOM element
-const createDefaultIconElement = () => {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("width", "16");
-  svg.setAttribute("height", "16");
-  svg.setAttribute("viewBox", "0 0 16 16");
-  svg.setAttribute("fill", "currentColor");
-
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute(
-    "d",
-    "M14.9 7.489A7 7 0 0 0 1.1 7.489a.5.5 0 0 0 .4.6.5.5 0 0 0 .6-.4 6 6 0 0 1 11.8 0 .5.5 0 0 0 .6.4.5.5 0 0 0 .4-.6zM8 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm0 7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"
-  );
-
-  svg.appendChild(path);
-  return svg;
-};
-
-// JSX version of default icon (for initial rendering)
-const DefaultIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="16"
-    height="16"
-    viewBox="0 0 16 16"
-    fill="currentColor"
-  >
-    <path d="M14.9 7.489A7 7 0 0 0 1.1 7.489a.5.5 0 0 0 .4.6.5.5 0 0 0 .6-.4 6 6 0 0 1 11.8 0 .5.5 0 0 0 .6.4.5.5 0 0 0 .4-.6zM8 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm0 7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
-  </svg>
-);
 
 const useDarkMode = () => {
   const [isDark, setIsDark] = React.useState(
@@ -186,21 +155,9 @@ const Popup: React.FC = () => {
                 >
                   <Logo>
                     {tab.favIconUrl ? (
-                      <img
-                        src={tab.favIconUrl}
-                        alt=""
-                        width={16}
-                        height={16}
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                          const iconElement = createDefaultIconElement();
-                          e.currentTarget.parentElement?.appendChild(
-                            iconElement
-                          );
-                        }}
-                      />
+                      <img src={tab.favIconUrl} alt="" width={16} height={16} />
                     ) : (
-                      <DefaultIcon />
+                      <Earth size={16} />
                     )}
                   </Logo>
                   <div className="tab-content">
@@ -249,19 +206,9 @@ const Popup: React.FC = () => {
               >
                 <Logo>
                   {tab.favIconUrl ? (
-                    <img
-                      src={tab.favIconUrl}
-                      alt=""
-                      width={16}
-                      height={16}
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                        const iconElement = createDefaultIconElement();
-                        e.currentTarget.parentElement?.appendChild(iconElement);
-                      }}
-                    />
+                    <img src={tab.favIconUrl} alt="" width={16} height={16} />
                   ) : (
-                    <DefaultIcon />
+                    <Earth size={16} />
                   )}
                 </Logo>
                 <div className="tab-content">
@@ -298,21 +245,9 @@ const Popup: React.FC = () => {
                 >
                   <Logo>
                     {tab.favIconUrl ? (
-                      <img
-                        src={tab.favIconUrl}
-                        alt=""
-                        width={16}
-                        height={16}
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                          const iconElement = createDefaultIconElement();
-                          e.currentTarget.parentElement?.appendChild(
-                            iconElement
-                          );
-                        }}
-                      />
+                      <img src={tab.favIconUrl} alt="" width={16} height={16} />
                     ) : (
-                      <DefaultIcon />
+                      <Earth size={16} />
                     )}
                   </Logo>
                   <div className="tab-content">
@@ -321,8 +256,7 @@ const Popup: React.FC = () => {
                       {tab.url ? extractDomain(tab.url) : ""}
                     </div>
                   </div>
-                  <div className="tab-actions">
-                  </div>
+                  <div className="tab-actions"></div>
                 </Command.Item>
               ))}
             </Command.Group>

@@ -29,9 +29,9 @@
     "name": "boninall"
   },
 
-  "__firefox__applications": {
+  "__firefox__browser_specific_settings": {
     "gecko": {
-      "id": "{754FB1AD-CC3B-4856-B6A0-7786F8CA9D17}"
+      "id": "{2a9833f4-990d-4f9e-923d-09bafe447352}"
     }
   },
 
