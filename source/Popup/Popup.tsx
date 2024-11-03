@@ -30,7 +30,6 @@ const extractDomain = (url: string) => {
   }
 };
 
-
 const Popup: React.FC = () => {
   const [openTabs, setOpenTabs] = React.useState<TabItem[]>([]);
   const [recentlyClosedTabs, setRecentlyClosedTabs] = React.useState<TabItem[]>(
@@ -251,8 +250,8 @@ const Popup: React.FC = () => {
             <Command.Group heading="Recently Closed Tabs">
               {recentlyClosedTabs.map((tab, index) => (
                 <Command.Item
-                  key={index}
-                  value={tab.title + tab.id + index}
+                  key={tab.id}
+                  value={(tab.title || "blank") + tab.id + index}
                   keywords={[tab.title || "", extractDomain(tab.url || "")]}
                   onSelect={() => tab.url && reopenTab(tab.url)}
                 >
@@ -282,13 +281,18 @@ const Popup: React.FC = () => {
           )}
         </Command.List>
 
-        <div cmdk-raycast-footer="">
-          <button cmdk-raycast-open-trigger="">
-            Open Application
+        <div cmdk-tab-search-footer="">
+          <div cmdk-tab-search-open-trigger="">
+            Open Tab
             <kbd>↵</kbd>
-          </button>
+          </div>
 
           <hr />
+
+          <div cmdk-tab-search-open-trigger="">
+            Search Web
+            <kbd>⌘+↵</kbd>
+          </div>
         </div>
       </Command>
     </div>
