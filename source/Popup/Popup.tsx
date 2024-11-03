@@ -108,7 +108,7 @@ const Popup: React.FC = () => {
   }, []);
 
   const mediaTabs = openTabs.filter((tab) => tab.audible);
-  const activeTabs = openTabs.filter((tab) => !tab.audible);
+  const activeTabs = openTabs.filter((tab) => !tab.audible && !tab.active);
 
   return (
     <div className={`tab-search`}>
