@@ -1,6 +1,6 @@
 {
   "name": "search-tabs",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Search tabs in your browser",
   "private": true,
   "repository": "https://github.com/quorafind/search-tabs.git",
