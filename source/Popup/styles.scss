@@ -502,6 +502,38 @@ body {
     font-weight: 500;
   }
 
+  [cmdk-tab-search-header] {
+    align-items: center;
+    background: var(--gray1);
+    display: flex;
+    height: 32px;
+    justify-content: flex-start;
+    width: 100%;
+    gap: 6px;
+    padding: 0px 16px;
+    padding-bottom: 4px;
+
+    [cmdk-tab-search-filter-button] {
+      display: flex;
+      align-items: center;
+      color: var(--gray12);
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: none;
+      background: var(--gray1);
+
+      font-size: 12px;
+
+      &.active {
+        background: var(--gray4);
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      background: var(--gray2);
+    }
+  }
+
   [cmdk-tab-search-footer] {
     display: flex;
     justify-content: flex-end;

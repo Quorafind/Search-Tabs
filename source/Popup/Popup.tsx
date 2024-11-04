@@ -60,11 +60,46 @@ const Popup: React.FC = () => {
   );
   const [historyItems, setHistoryItems] = React.useState<HistoryItem[]>([]);
   const [bookmarkItems, setBookmarkItems] = React.useState<BookmarkItem[]>([]);
+  const [filters, setFilters] = React.useState<{
+    all: boolean;
+    tab: boolean;
+    history: boolean;
+    bookmark: boolean;
+  }>({
+    all: true,
+    tab: false,
+    history: false,
+    bookmark: false,
+  });
 
   const [sessionsError, setSessionsError] = React.useState<string>("");
   const [searchValue, setSearchValue] = React.useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+
+  const handleFilterClick = (
+    filter: "all" | "tab" | "history" | "bookmark"
+  ) => {
+    if (filter === "all") {
+      setFilters({
+        all: true,
+        tab: false,
+        history: false,
+        bookmark: false,
+      });
+    } else {
+      const newFilters = {
+        ...filters,
+        all: false,
+        [filter]: !filters[filter],
+      };
+      // If no filters selected, default to all
+      if (!newFilters.tab && !newFilters.history && !newFilters.bookmark) {
+        newFilters.all = true;
+      }
+      setFilters(newFilters);
+    }
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -116,11 +151,11 @@ const Popup: React.FC = () => {
   };
 
   // Get history items
-  const fetchHistoryItems = async () => {
+  const fetchHistoryItems = async (query: string = "") => {
     try {
       const items = await browser.history.search({
-        text: "",
-        maxResults: 10,
+        text: query,
+        maxResults: 20,
         startTime: 0,
       });
       setHistoryItems(items);
@@ -209,6 +244,32 @@ const Popup: React.FC = () => {
       } else {
         handleSearch("google");
       }
+    } else if (e.ctrlKey || e.metaKey) {
+      // Switch filter
+      switch (e.key) {
+        case "1":
+          e.preventDefault();
+          e.stopPropagation();
+          handleFilterClick("all");
+          break;
+        case "2":
+          e.preventDefault();
+          e.stopPropagation();
+          handleFilterClick("tab");
+          break;
+        case "3":
+          e.preventDefault();
+          e.stopPropagation();
+          handleFilterClick("history");
+          break;
+        case "4":
+          e.preventDefault();
+          e.stopPropagation();
+          handleFilterClick("bookmark");
+          break;
+        default:
+          break;
+      }
     }
   };
 
@@ -221,12 +282,11 @@ const Popup: React.FC = () => {
 
   React.useEffect(() => {
     fetchBookmarkItems();
+    fetchHistoryItems(searchValue);
   }, [searchValue]);
 
   const mediaTabs = openTabs.filter((tab) => tab.audible);
   const activeTabs = openTabs.filter((tab) => !tab.audible && !tab.active);
-
-  // Check if input looks like a URL
 
   return (
     <div className={`tab-search`}>
@@ -246,7 +306,40 @@ const Popup: React.FC = () => {
             }
           }}
         />
+
         <hr cmdk-tab-search-loader="" />
+
+        <div cmdk-tab-search-header="">
+          <button
+            className={filters.all ? "active" : ""}
+            onClick={() => handleFilterClick("all")}
+            cmdk-tab-search-filter-button=""
+          >
+            All
+          </button>
+          <button
+            className={filters.tab ? "active" : ""}
+            onClick={() => handleFilterClick("tab")}
+            cmdk-tab-search-filter-button=""
+          >
+            Tab
+          </button>
+          <button
+            className={filters.history ? "active" : ""}
+            onClick={() => handleFilterClick("history")}
+            cmdk-tab-search-filter-button=""
+          >
+            History
+          </button>
+          <button
+            className={filters.bookmark ? "active" : ""}
+            onClick={() => handleFilterClick("bookmark")}
+            cmdk-tab-search-filter-button=""
+          >
+            Bookmark
+          </button>
+        </div>
+
         <Command.List ref={listRef}>
           <Command.Empty>No matching tabs found</Command.Empty>
 
@@ -285,7 +378,7 @@ const Popup: React.FC = () => {
             </Command.Group>
           )}
 
-          {mediaTabs.length > 0 && (
+          {(filters.all || filters.tab) && mediaTabs.length > 0 && (
             <Command.Group heading={searchValue ? "" : "Media Tabs"}>
               {mediaTabs.map((tab, index) => (
                 <Command.Item
@@ -338,97 +431,119 @@ const Popup: React.FC = () => {
             </Command.Group>
           )}
 
-          <Command.Group heading={searchValue ? "" : "Opened Tabs"}>
-            {activeTabs.map((tab, index) => (
-              <Command.Item
-                key={tab.id}
-                value={tab.title + tab.id + index}
-                keywords={[tab.title || "", extractDomain(tab.url || "")]}
-                onSelect={() => tab.id && switchToTab(tab.id)}
-              >
-                <Logo>
-                  {tab.favIconUrl ? (
-                    <img src={tab.favIconUrl} alt="" width={16} height={16} />
-                  ) : (
-                    <Earth size={16} />
-                  )}
-                </Logo>
-                <div className="tab-content">
-                  <div className="tab-title">{tab.title}</div>
-                  <div className="tab-url">
-                    {tab.url ? extractDomain(tab.url) : ""}
-                  </div>
-                </div>
-                <div className="tab-actions">
-                  <button
-                    className="action-button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      tab.id && browser.tabs.remove(tab.id);
-                    }}
+          {(filters.all || filters.tab) && (
+            <>
+              <Command.Group heading={searchValue ? "" : "Opened Tabs"}>
+                {activeTabs.map((tab, index) => (
+                  <Command.Item
+                    key={tab.id}
+                    value={tab.title + tab.id + index}
+                    keywords={[tab.title || "", extractDomain(tab.url || "")]}
+                    onSelect={() => tab.id && switchToTab(tab.id)}
                   >
-                    <X size={12} />
-                  </button>
-                </div>
-              </Command.Item>
-            ))}
-          </Command.Group>
+                    <Logo>
+                      {tab.favIconUrl ? (
+                        <img
+                          src={tab.favIconUrl}
+                          alt=""
+                          width={16}
+                          height={16}
+                        />
+                      ) : (
+                        <Earth size={16} />
+                      )}
+                    </Logo>
+                    <div className="tab-content">
+                      <div className="tab-title">{tab.title}</div>
+                      <div className="tab-url">
+                        {tab.url ? extractDomain(tab.url) : ""}
+                      </div>
+                    </div>
+                    <div className="tab-actions">
+                      <button
+                        className="action-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          tab.id && browser.tabs.remove(tab.id);
+                        }}
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  </Command.Item>
+                ))}
+              </Command.Group>
 
-          <Command.Separator />
+              <Command.Separator />
+            </>
+          )}
 
-          {!sessionsError && (
-            <Command.Group heading={searchValue ? "" : "Recently Closed Tabs"}>
-              {recentlyClosedTabs.map((tab, index) => (
-                <Command.Item
-                  key={tab.id}
-                  value={(tab.title || "blank") + tab.id + index}
-                  keywords={[tab.title || "", extractDomain(tab.url || "")]}
-                  onSelect={() => tab.url && reopenTab(tab.url)}
-                >
-                  <Logo>
-                    {tab.favIconUrl ? (
-                      <img src={tab.favIconUrl} alt="" width={16} height={16} />
-                    ) : (
+          {(filters.all || filters.tab) && !sessionsError && (
+            <>
+              <Command.Group
+                heading={searchValue ? "" : "Recently Closed Tabs"}
+              >
+                {recentlyClosedTabs.map((tab, index) => (
+                  <Command.Item
+                    key={tab.id}
+                    value={(tab.title || "blank") + tab.id + index}
+                    keywords={[tab.title || "", extractDomain(tab.url || "")]}
+                    onSelect={() => tab.url && reopenTab(tab.url)}
+                  >
+                    <Logo>
+                      {tab.favIconUrl ? (
+                        <img
+                          src={tab.favIconUrl}
+                          alt=""
+                          width={16}
+                          height={16}
+                        />
+                      ) : (
+                        <Earth size={16} />
+                      )}
+                    </Logo>
+                    <div className="tab-content">
+                      <div className="tab-title">{tab.title}</div>
+                      <div className="tab-url">
+                        {tab.url ? extractDomain(tab.url) : ""}
+                      </div>
+                    </div>
+                    <div className="tab-actions"></div>
+                  </Command.Item>
+                ))}
+              </Command.Group>
+              <Command.Separator />
+            </>
+          )}
+
+          {(filters.all || filters.bookmark) && bookmarkItems.length > 0 && (
+            <>
+              <Command.Group heading={"Bookmarks"}>
+                {bookmarkItems.map((item, index) => (
+                  <Command.Item
+                    key={item.id}
+                    value={(item.title || "blank") + item.id + index}
+                    keywords={[item.title || "", extractDomain(item.url || "")]}
+                    onSelect={() => item.url && reopenTab(item.url)}
+                  >
+                    <Logo>
                       <Earth size={16} />
-                    )}
-                  </Logo>
-                  <div className="tab-content">
-                    <div className="tab-title">{tab.title}</div>
-                    <div className="tab-url">
-                      {tab.url ? extractDomain(tab.url) : ""}
+                    </Logo>
+                    <div className="tab-content">
+                      <div className="tab-title">{item.title}</div>
+                      <div className="tab-url">
+                        {item.url ? extractDomain(item.url) : ""}
+                      </div>
                     </div>
-                  </div>
-                  <div className="tab-actions"></div>
-                </Command.Item>
-              ))}
-            </Command.Group>
+                    <div className="tab-actions"></div>
+                  </Command.Item>
+                ))}
+              </Command.Group>
+              <Command.Separator />
+            </>
           )}
 
-          {bookmarkItems.length > 0 && (
-            <Command.Group heading={"Bookmarks"}>
-              {bookmarkItems.map((item, index) => (
-                <Command.Item
-                  key={item.id}
-                  value={(item.title || "blank") + item.id + index}
-                  keywords={[item.title || "", extractDomain(item.url || "")]}
-                  onSelect={() => item.url && reopenTab(item.url)}
-                >
-                  <Logo>
-                    <Earth size={16} />
-                  </Logo>
-                  <div className="tab-content">
-                    <div className="tab-title">{item.title}</div>
-                    <div className="tab-url">
-                      {item.url ? extractDomain(item.url) : ""}
-                    </div>
-                  </div>
-                  <div className="tab-actions"></div>
-                </Command.Item>
-              ))}
-            </Command.Group>
-          )}
-
-          {historyItems.length > 0 && (
+          {(filters.all || filters.history) && historyItems.length > 0 && (
             <Command.Group heading={"History"}>
               {historyItems.map((item, index) => (
                 <Command.Item
