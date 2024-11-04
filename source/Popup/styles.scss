@@ -407,6 +407,10 @@ body {
     padding-bottom: 40px;
   }
 
+  [cmdk-tab-search-submenu-list] {
+    height: fit-content;
+  }
+
   [cmdk-tab-search-open-trigger],
   [cmdk-tab-search-subcommand-trigger] {
     color: var(--gray11);
@@ -515,7 +519,6 @@ body {
       width: 20px;
       height: 20px;
       filter: grayscale(1);
-      margin-right: auto;
     }
 
     hr {

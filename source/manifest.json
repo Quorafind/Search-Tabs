@@ -19,7 +19,9 @@
     "http://*/*",
     "https://*/*",
     "tabs",
-    "sessions"
+    "sessions",
+    "history",
+    "bookmarks"
   ],
 
   "content_security_policy": "script-src 'self'; object-src 'self'",

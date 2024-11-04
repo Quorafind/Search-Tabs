@@ -3,6 +3,7 @@ import { browser } from "webextension-polyfill-ts";
 import { Command } from "cmdk";
 import { Play, Pause, X, Earth, Search, ArrowRight } from "lucide-react";
 import "./styles.scss";
+import * as Popover from "@radix-ui/react-popover";
 
 interface TabItem {
   id?: number;
@@ -16,6 +17,28 @@ interface TabItem {
     muted: boolean;
   };
 }
+
+interface HistoryItem {
+  id: string;
+  url?: string;
+  title?: string;
+  lastVisitTime?: number;
+  visitCount?: number;
+  typedCount?: number;
+}
+
+interface BookmarkItem {
+  id: string;
+  url?: string;
+  title: string;
+  dateAdded?: number;
+}
+
+const isUrl = (value: string) => {
+  return /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(
+    value
+  );
+};
 
 // Add this helper function to extract domain from URL
 const extractDomain = (url: string) => {
@@ -35,6 +58,8 @@ const Popup: React.FC = () => {
   const [recentlyClosedTabs, setRecentlyClosedTabs] = React.useState<TabItem[]>(
     []
   );
+  const [historyItems, setHistoryItems] = React.useState<HistoryItem[]>([]);
+  const [bookmarkItems, setBookmarkItems] = React.useState<BookmarkItem[]>([]);
 
   const [sessionsError, setSessionsError] = React.useState<string>("");
   const [searchValue, setSearchValue] = React.useState("");
@@ -51,7 +76,9 @@ const Popup: React.FC = () => {
 
   // Get open tabs
   const fetchOpenTabs = async () => {
-    const tabs = await browser.tabs.query({});
+    const tabs = await browser.tabs.query({
+      currentWindow: true,
+    });
     const sortedTabs = (tabs as TabItem[]).sort((a, b) => {
       return (b.lastAccessed || 0) - (a.lastAccessed || 0);
     });
@@ -85,6 +112,41 @@ const Popup: React.FC = () => {
       console.error(errorMessage, error);
       setSessionsError(errorMessage);
       setRecentlyClosedTabs([]);
+    }
+  };
+
+  // Get history items
+  const fetchHistoryItems = async () => {
+    try {
+      const items = await browser.history.search({
+        text: "",
+        maxResults: 10,
+        startTime: 0,
+      });
+      setHistoryItems(items);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+      setHistoryItems([]);
+    }
+  };
+
+  // Get bookmark items
+  const fetchBookmarkItems = async () => {
+    try {
+      if (searchValue) {
+        const items = await browser.bookmarks.search({
+          query: searchValue,
+        });
+        const filteredItems = items.filter((item) => item.url);
+        setBookmarkItems(filteredItems);
+      } else {
+        const items = await browser.bookmarks.getRecent(10);
+        const filteredItems = items.filter((item) => item.url);
+        setBookmarkItems(filteredItems);
+      }
+    } catch (error) {
+      console.error("Error fetching bookmarks:", error);
+      setBookmarkItems([]);
     }
   };
 
@@ -140,9 +202,9 @@ const Popup: React.FC = () => {
 
   // Handle keyboard events
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && e.ctrlKey) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
-      if (isUrl(searchValue)) {
+      if (isUrl(searchValue) && e.shiftKey) {
         handleUrlNavigation(searchValue);
       } else {
         handleSearch("google");
@@ -153,17 +215,18 @@ const Popup: React.FC = () => {
   React.useEffect(() => {
     fetchOpenTabs();
     fetchRecentlyClosedTabs();
+    fetchHistoryItems();
+    fetchBookmarkItems();
   }, []);
+
+  React.useEffect(() => {
+    fetchBookmarkItems();
+  }, [searchValue]);
 
   const mediaTabs = openTabs.filter((tab) => tab.audible);
   const activeTabs = openTabs.filter((tab) => !tab.audible && !tab.active);
 
   // Check if input looks like a URL
-  const isUrl = (value: string) => {
-    return /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(
-      value
-    );
-  };
 
   return (
     <div className={`tab-search`}>
@@ -341,6 +404,54 @@ const Popup: React.FC = () => {
             </Command.Group>
           )}
 
+          {bookmarkItems.length > 0 && (
+            <Command.Group heading={"Bookmarks"}>
+              {bookmarkItems.map((item, index) => (
+                <Command.Item
+                  key={item.id}
+                  value={(item.title || "blank") + item.id + index}
+                  keywords={[item.title || "", extractDomain(item.url || "")]}
+                  onSelect={() => item.url && reopenTab(item.url)}
+                >
+                  <Logo>
+                    <Earth size={16} />
+                  </Logo>
+                  <div className="tab-content">
+                    <div className="tab-title">{item.title}</div>
+                    <div className="tab-url">
+                      {item.url ? extractDomain(item.url) : ""}
+                    </div>
+                  </div>
+                  <div className="tab-actions"></div>
+                </Command.Item>
+              ))}
+            </Command.Group>
+          )}
+
+          {historyItems.length > 0 && (
+            <Command.Group heading={"History"}>
+              {historyItems.map((item, index) => (
+                <Command.Item
+                  key={item.id}
+                  value={(item.title || "blank") + item.id + index}
+                  keywords={[item.title || "", extractDomain(item.url || "")]}
+                  onSelect={() => item.url && reopenTab(item.url)}
+                >
+                  <Logo>
+                    <Earth size={16} />
+                  </Logo>
+                  <div className="tab-content">
+                    <div className="tab-title">{item.title}</div>
+                    <div className="tab-url">
+                      {item.url ? extractDomain(item.url) : ""}
+                    </div>
+                  </div>
+                  <div className="tab-actions"></div>
+                </Command.Item>
+              ))}
+            </Command.Group>
+          )}
+
           {sessionsError && (
             <Command.Item value="error" disabled>
               <p className="error-message">{sessionsError}</p>
@@ -356,10 +467,13 @@ const Popup: React.FC = () => {
 
           <hr />
 
-          <div cmdk-tab-search-open-trigger="">
-            Search Web/Open URL
-            <kbd>⌘+↵</kbd>
-          </div>
+          <SubCommand
+            listRef={listRef}
+            selectedValue={searchValue}
+            inputRef={inputRef}
+            handleNavigateTo={handleUrlNavigation}
+            handleSearch={handleSearch}
+          />
         </div>
       </Command>
     </div>
@@ -383,6 +497,121 @@ export function Logo({
     >
       <div className="inner">{children}</div>
     </div>
+  );
+}
+function SubCommand({
+  inputRef,
+  listRef,
+  selectedValue,
+  handleNavigateTo,
+  handleSearch,
+}: {
+  inputRef: React.RefObject<HTMLInputElement>;
+  listRef: React.RefObject<HTMLElement>;
+  selectedValue: string;
+  handleNavigateTo: (url: string) => void;
+  handleSearch: (searchEngine: string) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    function listener(e: globalThis.KeyboardEvent) {
+      if (e.key === "o" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        e.stopPropagation();
+        setOpen((o) => !o);
+      }
+    }
+
+    document.addEventListener("keydown", listener);
+
+    return () => {
+      document.removeEventListener("keydown", listener);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const el = listRef.current;
+
+    if (!el) return;
+
+    if (open) {
+      el.style.overflow = "hidden";
+    } else {
+      el.style.overflow = "";
+    }
+  }, [open, listRef]);
+
+  return (
+    <Popover.Root open={open} onOpenChange={setOpen} modal>
+      <Popover.Trigger
+        cmdk-tab-search-subcommand-trigger=""
+        onClick={() => setOpen(true)}
+        aria-expanded={open}
+      >
+        Actions
+        <kbd>⌘</kbd>
+        <kbd>O</kbd>
+      </Popover.Trigger>
+      <Popover.Content
+        side="top"
+        align="end"
+        className="tab-search-submenu"
+        sideOffset={16}
+        alignOffset={0}
+        onCloseAutoFocus={(e) => {
+          e.preventDefault();
+          inputRef?.current?.focus();
+        }}
+      >
+        <Command>
+          <Command.List cmdk-tab-search-submenu-list="">
+            <Command.Group heading={"Trigger Actions"}>
+              <SubItem
+                shortcut="⌘ ↵"
+                disabled={!selectedValue}
+                onSelect={() => handleSearch("google")}
+              >
+                <Earth />
+                Search web
+              </SubItem>
+              <SubItem
+                shortcut="⌘ ⇧ ↵"
+                disabled={!isUrl(selectedValue)}
+                onSelect={() => handleNavigateTo(selectedValue)}
+              >
+                <ArrowRight />
+                Open URL
+              </SubItem>
+            </Command.Group>
+          </Command.List>
+          <Command.Input placeholder="Search for actions..." />
+        </Command>
+      </Popover.Content>
+    </Popover.Root>
+  );
+}
+
+function SubItem({
+  children,
+  shortcut,
+  disabled = false,
+  onSelect,
+}: {
+  children: React.ReactNode;
+  shortcut: string;
+  disabled?: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <Command.Item disabled={disabled} onSelect={onSelect}>
+      {children}
+      <div cmdk-tab-search-submenu-shortcuts="">
+        {shortcut.split(" ").map((key) => {
+          return <kbd key={key}>{key}</kbd>;
+        })}
+      </div>
+    </Command.Item>
   );
 }
 

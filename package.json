@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.23.9",
+    "@radix-ui/react-popover": "^1.1.2",
     "advanced-css-reset": "^1.2.2",
     "cmdk": "^1.0.3",
     "codemirror": "^6.0.1",
