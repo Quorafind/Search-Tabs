@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, KeyboardEvent } from "react";
 import { browser } from "webextension-polyfill-ts";
 import { Command } from "cmdk";
-import { Play, Pause, X, Earth } from "lucide-react";
+import { Play, Pause, X, Earth, Search, ArrowRight } from "lucide-react";
 import "./styles.scss";
 
 interface TabItem {
@@ -35,6 +35,7 @@ const Popup: React.FC = () => {
   const [recentlyClosedTabs, setRecentlyClosedTabs] = React.useState<TabItem[]>(
     []
   );
+
   const [sessionsError, setSessionsError] = React.useState<string>("");
   const [searchValue, setSearchValue] = React.useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -107,21 +108,45 @@ const Popup: React.FC = () => {
     fetchOpenTabs();
   };
 
-  // Handle search with default search engine
-  const handleSearch = async () => {
+  // Handle search with specified search engine
+  const handleSearch = async (searchEngine: string) => {
     if (searchValue) {
-      await browser.tabs.create({
-        url: `https://www.google.com/search?q=${encodeURIComponent(searchValue)}`,
-      });
+      let searchUrl = "";
+      switch (searchEngine) {
+        case "google":
+          searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchValue)}`;
+          break;
+        case "bing":
+          searchUrl = `https://www.bing.com/search?q=${encodeURIComponent(searchValue)}`;
+          break;
+        case "duckduckgo":
+          searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(searchValue)}`;
+          break;
+        default:
+          searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchValue)}`;
+      }
+      await browser.tabs.create({ url: searchUrl });
       window.close();
     }
+  };
+
+  // Handle direct URL navigation
+  const handleUrlNavigation = async (url: string) => {
+    // Add https if no protocol specified
+    const urlWithProtocol = url.match(/^https?:\/\//) ? url : `https://${url}`;
+    await browser.tabs.create({ url: urlWithProtocol });
+    window.close();
   };
 
   // Handle keyboard events
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && e.ctrlKey) {
       e.preventDefault();
-      handleSearch();
+      if (isUrl(searchValue)) {
+        handleUrlNavigation(searchValue);
+      } else {
+        handleSearch("google");
+      }
     }
   };
 
@@ -132,6 +157,13 @@ const Popup: React.FC = () => {
 
   const mediaTabs = openTabs.filter((tab) => tab.audible);
   const activeTabs = openTabs.filter((tab) => !tab.audible && !tab.active);
+
+  // Check if input looks like a URL
+  const isUrl = (value: string) => {
+    return /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(
+      value
+    );
+  };
 
   return (
     <div className={`tab-search`}>
@@ -155,8 +187,43 @@ const Popup: React.FC = () => {
         <Command.List ref={listRef}>
           <Command.Empty>No matching tabs found</Command.Empty>
 
+          {searchValue && (
+            <Command.Group heading={searchValue ? "" : "Quick Actions"}>
+              <Command.Item
+                key={"search-google"}
+                value={`Search google with ${searchValue}`}
+                onSelect={() => handleSearch("google")}
+              >
+                <Logo>
+                  <Search size={16} />
+                </Logo>
+                <div className="tab-content">
+                  <div className="tab-title">Search google</div>
+                  <div className="tab-url">{`Search web with ${searchValue}`}</div>
+                </div>
+                <div className="tab-actions"></div>
+              </Command.Item>
+              {isUrl(searchValue) && (
+                <Command.Item
+                  key={"navigate-to"}
+                  value={`Navigate to ${searchValue}`}
+                  onSelect={() => handleUrlNavigation(searchValue)}
+                >
+                  <Logo>
+                    <ArrowRight size={16} />
+                  </Logo>
+                  <div className="tab-content">
+                    <div className="tab-title">Navigate to</div>
+                    <div className="tab-url">{`Navigate to ${searchValue}`}</div>
+                  </div>
+                  <div className="tab-actions"></div>
+                </Command.Item>
+              )}
+            </Command.Group>
+          )}
+
           {mediaTabs.length > 0 && (
-            <Command.Group heading="Media Tabs">
+            <Command.Group heading={searchValue ? "" : "Media Tabs"}>
               {mediaTabs.map((tab, index) => (
                 <Command.Item
                   className="media-tab-item"
@@ -208,7 +275,7 @@ const Popup: React.FC = () => {
             </Command.Group>
           )}
 
-          <Command.Group heading="Opened Tabs">
+          <Command.Group heading={searchValue ? "" : "Opened Tabs"}>
             {activeTabs.map((tab, index) => (
               <Command.Item
                 key={tab.id}
@@ -247,7 +314,7 @@ const Popup: React.FC = () => {
           <Command.Separator />
 
           {!sessionsError && (
-            <Command.Group heading="Recently Closed Tabs">
+            <Command.Group heading={searchValue ? "" : "Recently Closed Tabs"}>
               {recentlyClosedTabs.map((tab, index) => (
                 <Command.Item
                   key={tab.id}
@@ -290,7 +357,7 @@ const Popup: React.FC = () => {
           <hr />
 
           <div cmdk-tab-search-open-trigger="">
-            Search Web
+            Search Web/Open URL
             <kbd>⌘+↵</kbd>
           </div>
         </div>
