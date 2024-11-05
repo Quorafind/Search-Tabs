@@ -10,12 +10,7 @@ Download: [Firefox](https://addons.mozilla.org/en-US/firefox/addon/search-and-na
 - Media tabs highlight;
 - Close tab action;
 - Search history, bookmarks, tabs;
-
-## TODO
-
-- Add more actions;
-- Add more tests;
-- Add more styles;
+- Full test coverage;
 
 ## Build Instructions
 
