@@ -1,10 +1,15 @@
 # Search Tabs
 
+Download: [Firefox](https://addons.mozilla.org/en-US/firefox/addon/search-and-navigate-tabs/)
+
+## Features
+
 - Firefox fully supported;
 - Hotkey to open popup;
 - Fuzzy search;
 - Media tabs highlight;
 - Close tab action;
+- Search history, bookmarks, tabs;
 
 ## TODO
 
@@ -20,7 +25,7 @@
 - Pnpm (recommended v9.11.0) - [Download & Install pnpm](https://pnpm.io/installation)
 - Firefox Browser (for testing)
 
-### Build steps 
+### Build steps
 
 1. Clone the repository or download the zip from github: `git clone https://github.com/quorafind/search-tabs.git`;
 2. Install dependencies: `pnpm install`;
