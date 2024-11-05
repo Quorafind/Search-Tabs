@@ -278,15 +278,39 @@ const Popup: React.FC = () => {
     fetchRecentlyClosedTabs();
     fetchHistoryItems();
     fetchBookmarkItems();
+
+    // Listen for tab changes
+    const handleTabChange = () => {
+      fetchOpenTabs();
+      fetchRecentlyClosedTabs();
+    };
+
+    browser.tabs.onRemoved.addListener(handleTabChange);
+    browser.tabs.onCreated.addListener(handleTabChange);
+    browser.tabs.onUpdated.addListener(handleTabChange);
+
+    return () => {
+      browser.tabs.onRemoved.removeListener(handleTabChange);
+      browser.tabs.onCreated.removeListener(handleTabChange);
+      browser.tabs.onUpdated.removeListener(handleTabChange);
+    };
   }, []);
 
   React.useEffect(() => {
     fetchBookmarkItems();
     fetchHistoryItems(searchValue);
+    // Scroll to top when search value changes
+    if (listRef.current) {
+      listRef.current.scrollTop = 0;
+    }
   }, [searchValue]);
 
-  const mediaTabs = openTabs.filter((tab) => tab.audible);
-  const activeTabs = openTabs.filter((tab) => !tab.audible && !tab.active);
+  const mediaTabs = openTabs.filter(
+    (tab) => tab.audible || tab.mutedInfo?.muted
+  );
+  const activeTabs = openTabs.filter(
+    (tab) => !tab.audible && !tab.mutedInfo?.muted && !tab.active
+  );
 
   return (
     <div className={`tab-search`}>
@@ -313,6 +337,7 @@ const Popup: React.FC = () => {
           <button
             className={filters.all ? "active" : ""}
             onClick={() => handleFilterClick("all")}
+            aria-pressed={filters.all}
             cmdk-tab-search-filter-button=""
           >
             All
@@ -320,6 +345,7 @@ const Popup: React.FC = () => {
           <button
             className={filters.tab ? "active" : ""}
             onClick={() => handleFilterClick("tab")}
+            aria-pressed={filters.tab}
             cmdk-tab-search-filter-button=""
           >
             Tab
@@ -327,6 +353,7 @@ const Popup: React.FC = () => {
           <button
             className={filters.history ? "active" : ""}
             onClick={() => handleFilterClick("history")}
+            aria-pressed={filters.history}
             cmdk-tab-search-filter-button=""
           >
             History
@@ -334,6 +361,7 @@ const Popup: React.FC = () => {
           <button
             className={filters.bookmark ? "active" : ""}
             onClick={() => handleFilterClick("bookmark")}
+            aria-pressed={filters.bookmark}
             cmdk-tab-search-filter-button=""
           >
             Bookmark
@@ -379,9 +407,10 @@ const Popup: React.FC = () => {
           )}
 
           {(filters.all || filters.tab) && mediaTabs.length > 0 && (
-            <Command.Group heading={searchValue ? "" : "Media Tabs"}>
+            <Command.Group heading={"Media Tabs"}>
               {mediaTabs.map((tab, index) => (
                 <Command.Item
+                  data-title={tab.title}
                   className="media-tab-item"
                   key={tab.id}
                   value={tab.title + tab.id + index}
@@ -614,6 +643,7 @@ export function Logo({
     </div>
   );
 }
+
 function SubCommand({
   inputRef,
   listRef,
